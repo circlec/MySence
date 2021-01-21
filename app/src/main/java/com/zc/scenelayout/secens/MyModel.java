@@ -22,6 +22,8 @@ import java.util.ArrayList;
 
 import static android.widget.RelativeLayout.ALIGN_PARENT_BOTTOM;
 import static android.widget.RelativeLayout.ALIGN_PARENT_RIGHT;
+import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_OVAL;
+import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_RECTANGLE;
 
 /**
  * @作者 zhouchao
@@ -29,8 +31,7 @@ import static android.widget.RelativeLayout.ALIGN_PARENT_RIGHT;
  * @描述
  */
 public class MyModel extends View {
-    public static final int MODEL_TYPE_OVAL = 0;
-    public static final int MODEL_TYPE_RECTANGLE = 1;
+
 
     public static final String TAG = MyModel.class.getSimpleName();
     public static ArrayList<ModelInfo> modelInfos = new ArrayList<>();

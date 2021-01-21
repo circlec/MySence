@@ -10,7 +10,7 @@
     <com.zc.scenelayout.secens.MyScene
         android:id="@+id/myScene"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="550dp"
         android:clickable="true"
         android:focusable="true" />
 

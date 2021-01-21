@@ -6,7 +6,9 @@ package com.zc.scenelayout.secens;
  * @描述
  */
 public class ModelInfo {
-
+    public static final int MODEL_TYPE_OVAL = 0;
+    public static final int MODEL_TYPE_RECTANGLE = 1;
+    public static final int MODEL_TYPE_FRAME = 2;
     private int id;
     private int left;
     private int top;

@@ -23,6 +23,10 @@ import java.util.ArrayList;
 
 import io.reactivex.disposables.Disposable;
 
+import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_FRAME;
+import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_OVAL;
+import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_RECTANGLE;
+
 /**
  * @作者 zhouchao
  * @日期 2021/1/20
@@ -124,9 +128,18 @@ public class MyScene extends View {
             } else {
                 mRectPaint.setColor(Color.RED);
             }
-            if (modelInfo.getModelType() == MyModel.MODEL_TYPE_OVAL) {
+            mRectPaint.setStrokeWidth(3);
+            if (modelInfo.getModelType() == MODEL_TYPE_OVAL) {
+                mRectPaint.setStyle(Paint.Style.FILL);
                 canvas.drawCircle(centerX, centerY, radius, mRectPaint);
-            } else if (modelInfo.getModelType() == MyModel.MODEL_TYPE_RECTANGLE) {
+            } else if (modelInfo.getModelType() == MODEL_TYPE_RECTANGLE) {
+                mRectPaint.setStyle(Paint.Style.FILL);
+                Rect rect = new Rect(modelInfo.getLeft(), modelInfo.getTop(), modelInfo.getRight(), modelInfo.getBottom());
+                canvas.drawRect(rect, mRectPaint);
+            } else if (modelInfo.getModelType() == MODEL_TYPE_FRAME) {
+                mRectPaint.setStrokeWidth(12);
+                mRectPaint.setColor(Color.GREEN);
+                mRectPaint.setStyle(Paint.Style.STROKE);
                 Rect rect = new Rect(modelInfo.getLeft(), modelInfo.getTop(), modelInfo.getRight(), modelInfo.getBottom());
                 canvas.drawRect(rect, mRectPaint);
             }
@@ -164,58 +177,42 @@ public class MyScene extends View {
 //                otherModelInfos.addAll(MyModel.modelInfos);
                 if (otherModelInfos.size() > clickModelPosition)
                     otherModelInfos.remove(clickModelPosition);
-                if (isPositionInModel) {
+//                if (isPositionInModel) {
                     clickLastX = (int) event.getRawX();
                     clickLastY = (int) event.getRawY();
-                }
+//                }
                 break;
             case MotionEvent.ACTION_UP:
-                Log.i(TAG, "ACTION_UP: ");
-                if (!isPositionInModel) break;
-                Log.i(TAG, "isPositionInModel: ");
-//                if (Math.abs(event.getRawX() - clickLastX) < 5 && Math.abs(event.getRawY() - clickLastY) < 5 && !isMove) {
-                if (!isMove) {
-                    Toast.makeText(getContext(), "是点击不是移动", Toast.LENGTH_SHORT).show();
-                    MyModel.modelInfos.get(clickModelPosition).setSelect(!MyModel.modelInfos.get(clickModelPosition).isSelect());
-                    invalidate();
-                } else {
-                    Log.i(TAG, "是移动: ");
-                    boolean isDouble = false;//是否重叠
-                    int clickLeft = MyModel.modelInfos.get(clickModelPosition).getLeft();
-                    int clickRight = MyModel.modelInfos.get(clickModelPosition).getRight();
-                    int clickTop = MyModel.modelInfos.get(clickModelPosition).getTop();
-                    int clickBottom = MyModel.modelInfos.get(clickModelPosition).getBottom();
-//                    Log.i(TAG, "clickLeft: " + clickLeft);
-//                    Log.i(TAG, "clickTop: " + clickTop);
-//                    Log.i(TAG, "clickRight: " + clickRight);
-//                    Log.i(TAG, "clickBottom: " + clickBottom);
-
-                    for (ModelInfo modelInfo : otherModelInfos) {
-//                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
-//                        Log.i(TAG, "modelInfo.getLeft: " + modelInfo.getLeft());
-//                        Log.i(TAG, "modelInfo.getTop: " + modelInfo.getTop());
-//                        Log.i(TAG, "modelInfo.getRight: " + modelInfo.getRight());
-//                        Log.i(TAG, "modelInfo.getBottom: " + modelInfo.getBottom());
-//                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
-                        isDouble = checkDouble2(clickLeft, clickRight, clickTop, clickBottom, isDouble, modelInfo);
-
+                if (!isPositionInModel) {//框选
+                    int framePosition = -1;
+                    for (int i = 0; i < MyModel.modelInfos.size(); i++) {
+                        ModelInfo modelInfo = MyModel.modelInfos.get(i);
+                        if (modelInfo.getModelType() == ModelInfo.MODEL_TYPE_FRAME) {
+                            framePosition = i;
+                            break;
+                        }
                     }
-
-                    if (isDouble) {
-                        Toast.makeText(getContext(), "有重叠区域", Toast.LENGTH_SHORT).show();
-                        MyModel.modelInfos.remove(clickModelPosition);
-                        MyModel.modelInfos.add(lastModelInfo.copy());
+                    if (framePosition != -1) {
+                        MyModel.modelInfos.remove(framePosition);
+                        invalidate();
+                    }
+                } else {
+//                if (Math.abs(event.getRawX() - clickLastX) < 5 && Math.abs(event.getRawY() - clickLastY) < 5 && !isMove) {
+                    if (!isMove) {
+                        Toast.makeText(getContext(), "是点击不是移动", Toast.LENGTH_SHORT).show();
+                        MyModel.modelInfos.get(clickModelPosition).setSelect(!MyModel.modelInfos.get(clickModelPosition).isSelect());
                         invalidate();
                     } else {
-                        Toast.makeText(getContext(), "已经移动到改位置", Toast.LENGTH_SHORT).show();
+                        moveUp();
                     }
+                    clickLastX = 0;
+                    clickLastY = 0;
+                    isPositionInModel = false;
+                    clickModelPosition = 0;
+                    isMove = false;
+                    otherModelInfos.clear();
                 }
-                clickLastX = 0;
-                clickLastY = 0;
-                isPositionInModel = false;
-                clickModelPosition = 0;
-                isMove = false;
-                otherModelInfos.clear();
+
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
                 break;
@@ -225,32 +222,90 @@ public class MyScene extends View {
             case MotionEvent.ACTION_POINTER_UP:
                 break;
             case MotionEvent.ACTION_MOVE:
-                if (!isPositionInModel) break;
-                int moveX = (int) (event.getRawX() - clickLastX);
-                int moveY = (int) (event.getRawY() - clickLastY);
-
-                int newLeft = MyModel.modelInfos.get(clickModelPosition).getLeft() + moveX;
-                int newRight = MyModel.modelInfos.get(clickModelPosition).getRight() + moveX;
-                int newTop = MyModel.modelInfos.get(clickModelPosition).getTop() + moveY;
-                int newBottom = MyModel.modelInfos.get(clickModelPosition).getBottom() + moveY;
-                if (newLeft < left
-                        || newRight > right
-                        || newTop < top
-                        || newBottom > bottom) {
-                    Toast.makeText(getContext(), "超出边界", Toast.LENGTH_SHORT).show();
+                if (!isPositionInModel) {//选中了空白区域 框选 画框
+                    updateSelectData(event);
                 } else {
-                    MyModel.modelInfos.get(clickModelPosition).setLeft(newLeft);
-                    MyModel.modelInfos.get(clickModelPosition).setRight(newRight);
-                    MyModel.modelInfos.get(clickModelPosition).setTop(newTop);
-                    MyModel.modelInfos.get(clickModelPosition).setBottom(newBottom);
-                    clickLastX = (int) event.getRawX();
-                    clickLastY = (int) event.getRawY();
-                    isMove = true;
-                    invalidate();
+                    int moveX = (int) (event.getRawX() - clickLastX);
+                    int moveY = (int) (event.getRawY() - clickLastY);
+                    int newLeft = MyModel.modelInfos.get(clickModelPosition).getLeft() + moveX;
+                    int newRight = MyModel.modelInfos.get(clickModelPosition).getRight() + moveX;
+                    int newTop = MyModel.modelInfos.get(clickModelPosition).getTop() + moveY;
+                    int newBottom = MyModel.modelInfos.get(clickModelPosition).getBottom() + moveY;
+                    if (newLeft < left
+                            || newRight > right
+                            || newTop < top
+                            || newBottom > bottom) {
+                        Toast.makeText(getContext(), "超出边界", Toast.LENGTH_SHORT).show();
+                    } else {
+                        MyModel.modelInfos.get(clickModelPosition).setLeft(newLeft);
+                        MyModel.modelInfos.get(clickModelPosition).setRight(newRight);
+                        MyModel.modelInfos.get(clickModelPosition).setTop(newTop);
+                        MyModel.modelInfos.get(clickModelPosition).setBottom(newBottom);
+                        clickLastX = (int) event.getRawX();
+                        clickLastY = (int) event.getRawY();
+                        isMove = true;
+                        invalidate();
+                    }
                 }
                 break;
         }
         return super.onTouchEvent(event);
+    }
+
+    private void updateSelectData(MotionEvent event) {
+        int newX = (int) event.getRawX();
+        int newY = (int) event.getRawY();
+        ModelInfo modelInfo = new ModelInfo();
+        modelInfo.setLeft(Math.min(newX, clickLastX));
+        modelInfo.setRight(Math.max(newX, clickLastX));
+        modelInfo.setTop(Math.min(newY, clickLastY));
+        modelInfo.setBottom(Math.max(newY, clickLastY));
+        modelInfo.setModelType(ModelInfo.MODEL_TYPE_FRAME);
+        int framePosition = -1;
+        for (int i = 0; i < MyModel.modelInfos.size(); i++) {
+            if (MyModel.modelInfos.get(i).getModelType() == MODEL_TYPE_FRAME) {
+                framePosition = i;
+            }
+        }
+        if (framePosition != -1) {
+            MyModel.modelInfos.remove(framePosition);
+        }
+        MyModel.modelInfos.add(modelInfo);
+        invalidate();
+    }
+
+    private void moveUp() {
+        Log.i(TAG, "是移动: ");
+        boolean isDouble = false;//是否重叠
+        int clickLeft = MyModel.modelInfos.get(clickModelPosition).getLeft();
+        int clickRight = MyModel.modelInfos.get(clickModelPosition).getRight();
+        int clickTop = MyModel.modelInfos.get(clickModelPosition).getTop();
+        int clickBottom = MyModel.modelInfos.get(clickModelPosition).getBottom();
+//                    Log.i(TAG, "clickLeft: " + clickLeft);
+//                    Log.i(TAG, "clickTop: " + clickTop);
+//                    Log.i(TAG, "clickRight: " + clickRight);
+//                    Log.i(TAG, "clickBottom: " + clickBottom);
+
+        for (ModelInfo modelInfo : otherModelInfos) {
+//                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
+//                        Log.i(TAG, "modelInfo.getLeft: " + modelInfo.getLeft());
+//                        Log.i(TAG, "modelInfo.getTop: " + modelInfo.getTop());
+//                        Log.i(TAG, "modelInfo.getRight: " + modelInfo.getRight());
+//                        Log.i(TAG, "modelInfo.getBottom: " + modelInfo.getBottom());
+//                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
+            isDouble = checkDouble2(clickLeft, clickRight, clickTop, clickBottom, isDouble, modelInfo);
+            if (isDouble) break;
+
+        }
+
+        if (isDouble) {
+            Toast.makeText(getContext(), "有重叠区域", Toast.LENGTH_SHORT).show();
+            MyModel.modelInfos.remove(clickModelPosition);
+            MyModel.modelInfos.add(lastModelInfo.copy());
+            invalidate();
+        } else {
+            Toast.makeText(getContext(), "已经移动到改位置", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private boolean checkDouble(int left, int right, int top, int bottom, boolean isDouble, ModelInfo modelInfo) {
