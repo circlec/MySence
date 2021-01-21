@@ -197,7 +197,7 @@ public class MyScene extends View {
 //                        Log.i(TAG, "modelInfo.getRight: " + modelInfo.getRight());
 //                        Log.i(TAG, "modelInfo.getBottom: " + modelInfo.getBottom());
 //                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
-                        isDouble = checkDouble(clickLeft, clickRight, clickTop, clickBottom, isDouble, modelInfo);
+                        isDouble = checkDouble2(clickLeft, clickRight, clickTop, clickBottom, isDouble, modelInfo);
 
                     }
 
@@ -267,6 +267,22 @@ public class MyScene extends View {
         } else if ((top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) && (left > modelInfo.getLeft() && left < modelInfo.getRight())) {
             isDouble = true;
         } else if ((top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) && (right > modelInfo.getLeft() && right < modelInfo.getRight())) {
+            isDouble = true;
+        }
+        return isDouble;
+    }
+
+    private boolean checkDouble2(int left, int right, int top, int bottom, boolean isDouble, ModelInfo modelInfo) {
+        int modelLeft = modelInfo.getLeft();
+        int modelRight = modelInfo.getRight();
+        int modelTop = modelInfo.getTop();
+        int modelBottom = modelInfo.getBottom();
+        if ((left > modelLeft && left < modelRight || right > modelLeft && right < modelRight)
+                && (top > modelTop && top < modelBottom || bottom > modelTop && bottom < modelBottom)) {
+            isDouble = true;
+        } else if ((modelLeft > left && modelLeft < right || modelRight > left && modelRight < right)
+                && (modelTop > top && modelTop < bottom || modelBottom > top && modelBottom < bottom)) {
+            //覆盖
             isDouble = true;
         }
         return isDouble;
