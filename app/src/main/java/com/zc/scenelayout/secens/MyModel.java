@@ -122,10 +122,7 @@ public class MyModel extends View {
                     if (modelInfos.size() != 0) {
                         boolean isDouble = false;
                         for (ModelInfo modelInfo : modelInfos) {
-                            if ((left > modelInfo.getLeft() && left < modelInfo.getRight() || right > modelInfo.getLeft() && right < modelInfo.getRight())
-                                    && (top > modelInfo.getTop() && top < modelInfo.getBottom() || bottom > modelInfo.getTop() && bottom < modelInfo.getBottom())) {
-                                isDouble = true;
-                            }
+                            isDouble = checkDouble(left, right, top, bottom, isDouble, modelInfo);
                         }
                         if (isDouble) {
                             Toast.makeText(getContext(), "有重叠区域", Toast.LENGTH_SHORT).show();
@@ -182,6 +179,25 @@ public class MyModel extends View {
                 break;
         }
         return super.onTouchEvent(event);
+    }
+
+    private boolean checkDouble(int left, int right, int top, int bottom, boolean isDouble, ModelInfo modelInfo) {
+        if ((left > modelInfo.getLeft() && left < modelInfo.getRight() || right > modelInfo.getLeft() && right < modelInfo.getRight())
+                && (top > modelInfo.getTop() && top < modelInfo.getBottom() || bottom > modelInfo.getTop() && bottom < modelInfo.getBottom())) {
+            isDouble = true;
+        } else if (left <= modelInfo.getLeft() && right >= modelInfo.getRight() && top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) {
+            //覆盖
+            isDouble = true;
+        } else if ((left <= modelInfo.getLeft() && right >= modelInfo.getRight()) && (top > modelInfo.getTop() && top < modelInfo.getBottom())) {
+            isDouble = true;
+        } else if ((left <= modelInfo.getLeft() && right >= modelInfo.getRight()) && (bottom > modelInfo.getTop() && bottom < modelInfo.getBottom())) {
+            isDouble = true;
+        } else if ((top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) && (left > modelInfo.getLeft() && left < modelInfo.getRight())) {
+            isDouble = true;
+        } else if ((top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) && (right > modelInfo.getLeft() && right < modelInfo.getRight())) {
+            isDouble = true;
+        }
+        return isDouble;
     }
 
     private void addModel() {

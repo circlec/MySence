@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -169,28 +170,44 @@ public class MyScene extends View {
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                Log.i(TAG, "ACTION_UP: ");
                 if (!isPositionInModel) break;
-                if (Math.abs(event.getRawX() - clickLastX) < 5 && Math.abs(event.getRawY() - clickLastY) < 5 && !isMove) {
+                Log.i(TAG, "isPositionInModel: ");
+//                if (Math.abs(event.getRawX() - clickLastX) < 5 && Math.abs(event.getRawY() - clickLastY) < 5 && !isMove) {
+                if (!isMove) {
                     Toast.makeText(getContext(), "是点击不是移动", Toast.LENGTH_SHORT).show();
                     MyModel.modelInfos.get(clickModelPosition).setSelect(!MyModel.modelInfos.get(clickModelPosition).isSelect());
                     invalidate();
                 } else {
-                    boolean isDouble = false;
+                    Log.i(TAG, "是移动: ");
+                    boolean isDouble = false;//是否重叠
                     int clickLeft = MyModel.modelInfos.get(clickModelPosition).getLeft();
                     int clickRight = MyModel.modelInfos.get(clickModelPosition).getRight();
                     int clickTop = MyModel.modelInfos.get(clickModelPosition).getTop();
                     int clickBottom = MyModel.modelInfos.get(clickModelPosition).getBottom();
+//                    Log.i(TAG, "clickLeft: " + clickLeft);
+//                    Log.i(TAG, "clickTop: " + clickTop);
+//                    Log.i(TAG, "clickRight: " + clickRight);
+//                    Log.i(TAG, "clickBottom: " + clickBottom);
+
                     for (ModelInfo modelInfo : otherModelInfos) {
-                        if ((clickLeft > modelInfo.getLeft() && clickLeft < modelInfo.getRight() || clickRight > modelInfo.getLeft() && clickRight < modelInfo.getRight())
-                                && (clickTop > modelInfo.getTop() && clickTop < modelInfo.getBottom() || clickBottom > modelInfo.getTop() && clickBottom < modelInfo.getBottom())) {
-                            isDouble = true;
-                        }
+//                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
+//                        Log.i(TAG, "modelInfo.getLeft: " + modelInfo.getLeft());
+//                        Log.i(TAG, "modelInfo.getTop: " + modelInfo.getTop());
+//                        Log.i(TAG, "modelInfo.getRight: " + modelInfo.getRight());
+//                        Log.i(TAG, "modelInfo.getBottom: " + modelInfo.getBottom());
+//                        Log.i(TAG, "-------------------------------------: " + otherModelInfos.size());
+                        isDouble = checkDouble(clickLeft, clickRight, clickTop, clickBottom, isDouble, modelInfo);
+
                     }
+
                     if (isDouble) {
                         Toast.makeText(getContext(), "有重叠区域", Toast.LENGTH_SHORT).show();
                         MyModel.modelInfos.remove(clickModelPosition);
                         MyModel.modelInfos.add(lastModelInfo.copy());
                         invalidate();
+                    } else {
+                        Toast.makeText(getContext(), "已经移动到改位置", Toast.LENGTH_SHORT).show();
                     }
                 }
                 clickLastX = 0;
@@ -208,6 +225,7 @@ public class MyScene extends View {
             case MotionEvent.ACTION_POINTER_UP:
                 break;
             case MotionEvent.ACTION_MOVE:
+                if (!isPositionInModel) break;
                 int moveX = (int) (event.getRawX() - clickLastX);
                 int moveY = (int) (event.getRawY() - clickLastY);
 
@@ -233,6 +251,25 @@ public class MyScene extends View {
                 break;
         }
         return super.onTouchEvent(event);
+    }
+
+    private boolean checkDouble(int left, int right, int top, int bottom, boolean isDouble, ModelInfo modelInfo) {
+        if ((left > modelInfo.getLeft() && left < modelInfo.getRight() || right > modelInfo.getLeft() && right < modelInfo.getRight())
+                && (top > modelInfo.getTop() && top < modelInfo.getBottom() || bottom > modelInfo.getTop() && bottom < modelInfo.getBottom())) {
+            isDouble = true;
+        } else if (left <= modelInfo.getLeft() && right >= modelInfo.getRight() && top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) {
+            //覆盖
+            isDouble = true;
+        } else if ((left <= modelInfo.getLeft() && right >= modelInfo.getRight()) && (top > modelInfo.getTop() && top < modelInfo.getBottom())) {
+            isDouble = true;
+        } else if ((left <= modelInfo.getLeft() && right >= modelInfo.getRight()) && (bottom > modelInfo.getTop() && bottom < modelInfo.getBottom())) {
+            isDouble = true;
+        } else if ((top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) && (left > modelInfo.getLeft() && left < modelInfo.getRight())) {
+            isDouble = true;
+        } else if ((top <= modelInfo.getTop() && bottom >= modelInfo.getBottom()) && (right > modelInfo.getLeft() && right < modelInfo.getRight())) {
+            isDouble = true;
+        }
+        return isDouble;
     }
 
 }
