@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <com.zc.scenelayout.secens.MyScene
+        android:id="@+id/myScene"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <com.zc.scenelayout.secens.MyModel
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        android:focusable="true"
+        app:model_type="0" />
+
+    <com.zc.scenelayout.secens.MyModel
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        android:focusable="true"
+        app:model_type="1" />
+</RelativeLayout>
