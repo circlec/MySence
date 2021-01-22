@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -19,13 +18,9 @@ import androidx.annotation.RequiresApi;
 
 import com.zc.scenelayout.utils.RxBus;
 
-
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
 import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_BOX;
@@ -270,7 +265,7 @@ public class MyScene extends View {
      */
     private void moveModel(MotionEvent event) {
         int moveX = (int) (event.getRawX() - clickLastX);
-        int moveY = (int) (event.getRawY() - clickLastY);
+        int moveY = (int) (event.getRawY()-getStatusBarHeight(getContext()) - clickLastY);
         int newLeft = MyModel.modelInfos.get(clickModelPosition).getLeft() + moveX;
         int newRight = MyModel.modelInfos.get(clickModelPosition).getRight() + moveX;
         int newTop = MyModel.modelInfos.get(clickModelPosition).getTop() + moveY;
@@ -283,7 +278,7 @@ public class MyScene extends View {
         } else {
             setModelBoundary(MyModel.modelInfos.get(clickModelPosition), newLeft, newRight, newTop, newBottom);
             clickLastX = (int) event.getRawX();
-            clickLastY = (int) event.getRawY();
+            clickLastY = (int) event.getRawY()-getStatusBarHeight(getContext());
             isMoveModel = true;
             invalidate();
         }
@@ -340,7 +335,7 @@ public class MyScene extends View {
      */
     private void actionDown(MotionEvent event) {
         int rawX = (int) event.getRawX();
-        int rawY = (int) event.getRawY();
+        int rawY = (int) event.getRawY() - getStatusBarHeight(getContext());//需要减去状态栏高度
         for (int i = 0; i < MyModel.modelInfos.size(); i++) {
             ModelInfo modelInfo = MyModel.modelInfos.get(i);
             if (rawX > modelInfo.getLeft()
@@ -355,28 +350,48 @@ public class MyScene extends View {
         }
         if (otherModelInfos.size() > clickModelPosition)
             otherModelInfos.remove(clickModelPosition);
-        clickLastX = (int) event.getRawX();
-        clickLastY = (int) event.getRawY();
+        clickLastX = rawX;
+        clickLastY = rawY;
     }
 
     /**
      * 设置框选选中的模型 选中的模型状态设置选中
      *
-     * @param selectLeft   框选左边界
-     * @param selectTop    框选右边界
-     * @param selectRight  框选上边界
-     * @param selectBottom 框选下边界
-     * @param modelInfo    模型数据
+     * @param left      框选左边界
+     * @param top       框选右边界
+     * @param right     框选上边界
+     * @param bottom    框选下边界
+     * @param modelInfo 模型数据
      */
-    private void setSelectModel(int selectLeft, int selectTop, int selectRight, int selectBottom, ModelInfo modelInfo) {
-        if (selectLeft < modelInfo.getLeft()
-                && selectRight > modelInfo.getRight()
-                && selectTop < modelInfo.getTop()
-                && selectBottom > modelInfo.getBottom()) {
+    private void setSelectModel(int left, int top, int right, int bottom, ModelInfo modelInfo) {
+        //只有全部选中才判断是选中 暂时不用 用下面的只要有部分选中就算选中
+//        if (selectLeft < modelInfo.getLeft()
+//                && selectRight > modelInfo.getRight()
+//                && selectTop < modelInfo.getTop()
+//                && selectBottom > modelInfo.getBottom()) {
+//            modelInfo.setSelect(true);
+//        } else {
+//            modelInfo.setSelect(false);
+//        }
+
+        int modelLeft = modelInfo.getLeft();
+        int modelRight = modelInfo.getRight();
+        int modelTop = modelInfo.getTop();
+        int modelBottom = modelInfo.getBottom();
+        if ((left > modelLeft && left < modelRight || right > modelLeft && right < modelRight)
+                && (top > modelTop && top < modelBottom || bottom > modelTop && bottom < modelBottom)) {//四个点坐标有一个点在模型内部就是重叠
             modelInfo.setSelect(true);
-        } else {
+        } else if ((modelLeft > left && modelLeft < right || modelRight > left && modelRight < right)
+                && (modelTop > top && modelTop < bottom || modelBottom > top && modelBottom < bottom)) {//覆盖模型或者被模型覆盖的情况
+            modelInfo.setSelect(true);
+        } else if (modelLeft < left && modelRight > right && modelTop > top && modelBottom < bottom) {//四个点都不在模型内部 但是中间部分区域 重叠到一起
+            modelInfo.setSelect(true);
+        } else if (modelLeft > left && modelRight < right && modelTop < top && modelBottom > bottom) {//四个点都不在模型内部 但是中间部分区域 重叠到一起
+            modelInfo.setSelect(true);
+        }else{
             modelInfo.setSelect(false);
         }
+
     }
 
     /**
@@ -386,13 +401,13 @@ public class MyScene extends View {
      */
     private void updateSelectData(MotionEvent event) {
         int newX = (int) event.getRawX();
-        int newY = (int) event.getRawY();
+        int newY = (int) event.getRawY()-getStatusBarHeight(getContext());
 
         int framePosition = -1;
-        int selectLeft = (int) Math.min(event.getRawX(), clickLastX);
-        int selectRight = (int) Math.max(event.getRawX(), clickLastX);
-        int selectTop = (int) Math.min(event.getRawY(), clickLastY);
-        int selectBottom = (int) Math.max(event.getRawY(), clickLastY);
+        int selectLeft =  Math.min(newX, clickLastX);
+        int selectRight =  Math.max(newX, clickLastX);
+        int selectTop =  Math.min(newY, clickLastY);
+        int selectBottom =  Math.max(newY, clickLastY);
         for (int i = 0; i < MyModel.modelInfos.size(); i++) {
             if (MyModel.modelInfos.get(i).getModelType() == MODEL_TYPE_BOX) {
                 framePosition = i;
@@ -467,11 +482,14 @@ public class MyScene extends View {
         int modelTop = modelInfo.getTop();
         int modelBottom = modelInfo.getBottom();
         if ((left > modelLeft && left < modelRight || right > modelLeft && right < modelRight)
-                && (top > modelTop && top < modelBottom || bottom > modelTop && bottom < modelBottom)) {
+                && (top > modelTop && top < modelBottom || bottom > modelTop && bottom < modelBottom)) {//四个点坐标有一个点在模型内部就是重叠
             return true;
         } else if ((modelLeft > left && modelLeft < right || modelRight > left && modelRight < right)
-                && (modelTop > top && modelTop < bottom || modelBottom > top && modelBottom < bottom)) {
-            //覆盖
+                && (modelTop > top && modelTop < bottom || modelBottom > top && modelBottom < bottom)) {//覆盖模型或者被模型覆盖的情况
+            return true;
+        } else if (modelLeft < left && modelRight > right && modelTop > top && modelBottom < bottom) {//四个点都不在模型内部 但是中间部分区域 重叠到一起
+            return true;
+        } else if (modelLeft > left && modelRight < right && modelTop < top && modelBottom > bottom) {
             return true;
         }
         return false;
@@ -508,5 +526,14 @@ public class MyScene extends View {
             }
         }
         if (isHaveSelectMode) invalidate();
+    }
+
+    private int getStatusBarHeight(Context context) {
+        int result = 0;
+        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = context.getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
     }
 }

@@ -15,16 +15,16 @@
         android:focusable="true" />
 
     <com.zc.scenelayout.secens.MyModel
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_alignParentBottom="true"
         android:clickable="true"
         android:focusable="true"
         app:model_type="0" />
 
     <com.zc.scenelayout.secens.MyModel
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="80dp"
+        android:layout_height="20dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:clickable="true"

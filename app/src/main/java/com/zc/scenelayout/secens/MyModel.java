@@ -88,10 +88,10 @@ public class MyModel extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if (modelType == MODEL_TYPE_OVAL) {
-            canvas.drawColor(Color.GREEN);
+//            canvas.drawColor(Color.GREEN);
             canvas.drawCircle(getWidth() / 2, getHeight() / 2, getWidth() / 2, mRectPaint);
         } else if (modelType == MODEL_TYPE_RECTANGLE) {
-            canvas.drawColor(Color.GREEN);
+            canvas.drawColor(Color.RED);
         }
     }
 
@@ -123,7 +123,7 @@ public class MyModel extends View {
                     if (modelInfos.size() != 0) {
                         boolean isDouble = false;
                         for (ModelInfo modelInfo : modelInfos) {
-                            isDouble = checkDouble2(left, right, top, bottom, isDouble, modelInfo);
+                            isDouble = checkDouble2(left, right, top, bottom, modelInfo);
                         }
                         if (isDouble) {
                             Toast.makeText(getContext(), "有重叠区域", Toast.LENGTH_SHORT).show();
@@ -182,21 +182,35 @@ public class MyModel extends View {
         return super.onTouchEvent(event);
     }
 
-    private boolean checkDouble2(int left, int right, int top, int bottom, boolean isDouble, ModelInfo modelInfo) {
+    /**
+     * 判断模型移动时是否与其他模型存在重叠
+     *
+     * @param left      移动模型的左边界
+     * @param right     移动模型的右边界
+     * @param top       移动模型的上边界
+     * @param bottom    移动模型的下边界
+     * @param modelInfo 其他模型的数据
+     * @return 重叠返回true 未重叠返回false
+     */
+    private boolean checkDouble2(int left, int right, int top, int bottom, ModelInfo modelInfo) {
         int modelLeft = modelInfo.getLeft();
         int modelRight = modelInfo.getRight();
         int modelTop = modelInfo.getTop();
         int modelBottom = modelInfo.getBottom();
         if ((left > modelLeft && left < modelRight || right > modelLeft && right < modelRight)
-                && (top > modelTop && top < modelBottom || bottom > modelTop && bottom < modelBottom)) {
-            isDouble = true;
+                && (top > modelTop && top < modelBottom || bottom > modelTop && bottom < modelBottom)) {//四个点坐标有一个点在模型内部就是重叠
+            return true;
         } else if ((modelLeft > left && modelLeft < right || modelRight > left && modelRight < right)
-                && (modelTop > top && modelTop < bottom || modelBottom > top && modelBottom < bottom)) {
-            //覆盖
-            isDouble = true;
+                && (modelTop > top && modelTop < bottom || modelBottom > top && modelBottom < bottom)) {//覆盖模型或者被模型覆盖的情况
+            return true;
+        } else if (modelLeft < left && modelRight > right && modelTop > top && modelBottom < bottom) {//四个点都不在模型内部 但是中间部分区域 重叠到一起
+            return true;
+        } else if (modelLeft > left && modelRight < right && modelTop < top && modelBottom > bottom) {
+            return true;
         }
-        return isDouble;
+        return false;
     }
+
 
     private void addModel() {
         Toast.makeText(getContext(), "通知场景，添加此模型", Toast.LENGTH_SHORT).show();
