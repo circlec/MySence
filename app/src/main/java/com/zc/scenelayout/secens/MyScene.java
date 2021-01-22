@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
@@ -20,7 +21,11 @@ import com.zc.scenelayout.utils.RxBus;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 
 import static com.zc.scenelayout.secens.ModelInfo.MODEL_TYPE_BOX;
@@ -192,7 +197,11 @@ public class MyScene extends View {
         mRectPaint.setPathEffect(new DashPathEffect(new float[]{10, 0}, 0));
         mRectPaint.setStyle(Paint.Style.FILL);
         Rect rect = new Rect(modelInfo.getLeft(), modelInfo.getTop(), modelInfo.getRight(), modelInfo.getBottom());
+        int centerX = (modelInfo.getLeft() + modelInfo.getRight()) / 2;
+        int centerY = (modelInfo.getTop() + modelInfo.getBottom()) / 2;
+        canvas.rotate(modelInfo.getRotationAngle(), centerX, centerY);
         canvas.drawRect(rect, mRectPaint);
+        canvas.rotate(-modelInfo.getRotationAngle(), centerX, centerY);
     }
 
     /**
@@ -468,4 +477,36 @@ public class MyScene extends View {
         return false;
     }
 
+    /**
+     * 删除选中模型
+     */
+    public void deleteSelectModel() {
+        boolean haveSelectDelete = false;
+        Iterator<ModelInfo> it = MyModel.modelInfos.iterator();
+        while (it.hasNext()) {
+            ModelInfo modelInfo = it.next();
+            if (modelInfo.isSelect()) {
+                it.remove();
+                haveSelectDelete = true;
+            }
+        }
+        if (haveSelectDelete)
+            invalidate();
+    }
+
+    /**
+     * 设置选中模型旋转角度
+     *
+     * @param rotationAngle 旋转角度
+     */
+    public void setSelectRotate(int rotationAngle) {
+        boolean isHaveSelectMode = false;
+        for (ModelInfo modelInfo : MyModel.modelInfos) {
+            if (modelInfo.isSelect()) {
+                modelInfo.setRotationAngle(modelInfo.getRotationAngle() + rotationAngle);
+                isHaveSelectMode = true;
+            }
+        }
+        if (isHaveSelectMode) invalidate();
+    }
 }
