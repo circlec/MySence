@@ -364,34 +364,35 @@ public class Engine {
             }
         }
 
-//        boolean isDouble = false;
-//        for (VenueModelInfo modelInfo : otherModelInfos) {
-//            isDouble = checkDouble2(modelInfo.getLeft(), modelInfo.getRight(), modelInfo.getTop(), modelInfo.getBottom(), alginModelInfo);
-//        }
-//        if (!isDouble) {
+        //检测对齐后的模型是否与其他模型重叠
+        boolean isDouble = false;
+        for (VenueModelInfo modelInfo : otherModelInfos) {
+            isDouble = checkDouble2(modelInfo.getLeft(), modelInfo.getRight(), modelInfo.getTop(), modelInfo.getBottom(), alginModelInfo);
+        }
+        if (!isDouble) {
 //            clickModel.setLeft(alginModelInfo.getLeft());
 //            clickModel.setRight(alginModelInfo.getRight());
 //            clickModel.setTop(alginModelInfo.getTop());
 //            clickModel.setBottom(alginModelInfo.getBottom());
 //            handlerAction(Action.ACTION_ALIGN);
-//        }
-        //检测边界
-        int newLeft = alginModelInfo.getLeft();
-        int newRight = alginModelInfo.getRight();
-        int newTop = alginModelInfo.getTop();
-        int newBottom = alginModelInfo.getBottom();
-        if (newLeft >= left
-                && newRight <= right
-                && newTop >= top
-                && newBottom <= bottom) {
+            //检测边界
+            int newLeft = alginModelInfo.getLeft();
+            int newRight = alginModelInfo.getRight();
+            int newTop = alginModelInfo.getTop();
+            int newBottom = alginModelInfo.getBottom();
+            if (newLeft >= left
+                    && newRight <= right
+                    && newTop >= top
+                    && newBottom <= bottom) {
 //            Toast.makeText(getContext(), "未超出边界，对齐模型", Toast.LENGTH_SHORT).show();
-            clickModel.setLeft(alginModelInfo.getLeft());
-            clickModel.setRight(alginModelInfo.getRight());
-            clickModel.setTop(alginModelInfo.getTop());
-            clickModel.setBottom(alginModelInfo.getBottom());
-            handlerAction(Action.ACTION_ALIGN);
-        } else {
-            handlerAction(Action.ACTION_ALIGN_FAIL_OUT_BOUNDARY);
+                clickModel.setLeft(alginModelInfo.getLeft());
+                clickModel.setRight(alginModelInfo.getRight());
+                clickModel.setTop(alginModelInfo.getTop());
+                clickModel.setBottom(alginModelInfo.getBottom());
+                handlerAction(Action.ACTION_ALIGN);
+            } else {
+                handlerAction(Action.ACTION_ALIGN_FAIL_OUT_BOUNDARY);
+            }
         }
 
 
