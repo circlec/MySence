@@ -299,4 +299,8 @@ public class MyVenue extends View implements ActionListener {
     public void setSelectRotate(int rotationAngle) {
         engine.setSelectRotate(rotationAngle);
     }
+
+    public void setAlign(boolean isAlign) {
+        engine.setAlign(isAlign);
+    }
 }
