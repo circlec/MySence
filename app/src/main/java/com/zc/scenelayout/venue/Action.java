@@ -20,6 +20,7 @@ public class Action {
     public static final int ACTION_MOVE_FAIL_DOUBLE = 9;//有重叠区域，移动模型失败
     public static final int ACTION_ROTATE = 10;//旋转选中模型
     public static final int ACTION_CLEAR_SELECT_AREA = 11;//清除选中框
+    public static final int ACTION_ALIGN = 12;//对齐模型
 
     private int actitonStatus;
 

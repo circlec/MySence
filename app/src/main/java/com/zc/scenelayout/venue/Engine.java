@@ -1,6 +1,7 @@
 package com.zc.scenelayout.venue;
 
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import java.util.ArrayList;
@@ -28,8 +29,8 @@ public class Engine {
     private int venueHeight = 0;//场馆高度
     private int venueWidth = 0;//场馆宽度
 
-    private int modelWidth = 200;
-    private int modelHeight = 200;
+    private int modelWidth = 160;
+    private int modelHeight = 160;
 
     private ArrayList<VenueModelInfo> modelInfos = new ArrayList<>();
     //画笔
@@ -184,7 +185,9 @@ public class Engine {
             case Action.ACTION_CLEAR_SELECT_AREA:
                 actionListener.clearSelectArea();
                 break;
-
+            case Action.ACTION_ALIGN:
+                actionListener.align();
+                break;
 
         }
     }
@@ -269,20 +272,131 @@ public class Engine {
             isDouble = checkDouble2(clickModel.getLeft(), clickModel.getRight(), clickModel.getTop(), clickModel.getBottom(), modelInfo);
             if (isDouble) break;
         }
-        if (!isDouble) {
+        if (!isDouble) {//没有重叠添加模型
             VenueModelInfo venueModelInfo = lastModelInfo.copy();
             modelInfos.add(venueModelInfo);
-            modelInfos.get(clickModelPosition).setDefaultModel(false);
-        } else {
+//            VenueModelInfo venueModelInfoClick = alignLine(modelInfos.get(clickModelPosition));
+            VenueModelInfo venueModelInfoClick = modelInfos.get(clickModelPosition);
+            venueModelInfoClick.setDefaultModel(false);
+            alignModel(venueModelInfoClick);
+        } else {//有重叠 模型回到初始位置
             VenueModelInfo modelInfo = modelInfos.get(clickModelPosition);
             modelInfo.setLeft(lastModelInfo.getLeft());
             modelInfo.setRight(lastModelInfo.getRight());
             modelInfo.setTop(lastModelInfo.getTop());
             modelInfo.setBottom(lastModelInfo.getBottom());
-            modelInfos.add(modelInfo);
         }
 
 
+    }
+
+    /**
+     * 对齐模型
+     *
+     * @param clickModel 需要对齐的模型
+     */
+    private void alignModel(VenueModelInfo clickModel) {
+        if (otherModelInfos.size() == 0) return;
+        int clickModelLeft = clickModel.getLeft();
+        int clickModelRight = clickModel.getRight();
+        int clickModelTop = clickModel.getTop();
+        int clickModelBottom = clickModel.getBottom();
+
+        //先找出左上角最近的模型
+        VenueModelInfo nearestModel = null;
+        int nearestDistance = 0;
+        for (VenueModelInfo modelInfo : otherModelInfos) {
+            if (nearestModel == null) {
+                nearestModel = modelInfo;
+                nearestDistance = (int) (Math.pow(clickModelLeft - modelInfo.getLeft(), 2) + Math.pow(clickModelTop - modelInfo.getTop(), 2));
+            } else {
+                int distance = (int) (Math.pow(clickModelLeft - modelInfo.getLeft(), 2) + Math.pow(clickModelTop - modelInfo.getTop(), 2));
+                if (distance < nearestDistance) {
+                    nearestModel = modelInfo;
+                    nearestDistance = (int) (Math.pow(clickModelLeft - modelInfo.getLeft(), 2) + Math.pow(clickModelTop - modelInfo.getTop(), 2));
+                }
+            }
+        }
+
+        //如果top或者bottom 在最近模型的 top和bottom之间的话 top对齐  (如果是在最近模型左边 则 right在最近模型left+80px处 如果是在最近模型右边 则left在最近模型right+80x处)
+        //如果left或者right 在最近模型的 left和right之间的话 left对齐 (如果是在最近模型上边 则 bottom在最近模型top+80px处 如果是在最近模型下边 则top在最近模型bottom+80px处)
+        if (nearestModel == null) return;
+
+        VenueModelInfo alginModelInfo = clickModel.copy();
+        if ((clickModelTop > nearestModel.getTop() && clickModelTop < nearestModel.getBottom())
+                || (clickModelBottom > nearestModel.getTop() && clickModelBottom < nearestModel.getBottom())) {
+            //top对齐
+            int offsetY = nearestModel.getTop() - alginModelInfo.getTop();
+            alginModelInfo.setTop(alginModelInfo.getTop() + offsetY);
+            alginModelInfo.setBottom(alginModelInfo.getBottom() + offsetY);
+            if (clickModelLeft > nearestModel.getRight()) {
+                //如果是在最近模型右边 则left在最近模型right+80px处
+                int offsetX = nearestModel.getRight() + 80 - alginModelInfo.getLeft();
+                alginModelInfo.setLeft(alginModelInfo.getLeft() + offsetX);
+                alginModelInfo.setRight(alginModelInfo.getRight() + offsetX);
+            } else if (clickModelRight < nearestModel.getLeft()) {
+                //如果是在最近模型左边 则 right在最近模型left+20px处
+                int offsetX = nearestModel.getLeft() - 80 - alginModelInfo.getRight();
+                alginModelInfo.setLeft(alginModelInfo.getLeft() + offsetX);
+                alginModelInfo.setRight(alginModelInfo.getRight() + offsetX);
+            }
+
+        } else if ((clickModelLeft > nearestModel.getLeft() && clickModelLeft < nearestModel.getRight())
+                || (clickModelRight > nearestModel.getLeft() && clickModelRight < nearestModel.getRight())) {
+            //left 对齐
+            int offsetX = nearestModel.getLeft() - alginModelInfo.getLeft();
+            alginModelInfo.setLeft(alginModelInfo.getLeft() + offsetX);
+            alginModelInfo.setRight(alginModelInfo.getRight() + offsetX);
+            if (clickModelTop > nearestModel.getBottom()) {
+                //如果是在最近模型上边 则 bottom在最近模型top+80px处
+                int offsetY = nearestModel.getBottom() + 80 - alginModelInfo.getTop();
+                alginModelInfo.setTop(alginModelInfo.getTop() + offsetY);
+                alginModelInfo.setBottom(alginModelInfo.getBottom() + offsetY);
+            } else if (clickModelBottom < nearestModel.getTop()) {
+                //如果是在最近模型下边 则top在最近模型bottom+80px处
+                int offsetY = nearestModel.getTop() - 80 - alginModelInfo.getBottom();
+                alginModelInfo.setTop(alginModelInfo.getTop() + offsetY);
+                alginModelInfo.setBottom(alginModelInfo.getBottom() + offsetY);
+            }
+        }
+
+        boolean isDouble = false;
+        for (VenueModelInfo modelInfo : otherModelInfos) {
+            isDouble = checkDouble2(modelInfo.getLeft(), modelInfo.getRight(), modelInfo.getTop(), modelInfo.getBottom(), alginModelInfo);
+        }
+        if (!isDouble) {
+            clickModel.setLeft(alginModelInfo.getLeft());
+            clickModel.setRight(alginModelInfo.getRight());
+            clickModel.setTop(alginModelInfo.getTop());
+            clickModel.setBottom(alginModelInfo.getBottom());
+            handlerAction(Action.ACTION_ALIGN);
+        }
+    }
+
+    /**
+     * 移动后放开时 模型与网格线对其
+     *
+     * @param venueModelInfoClick 需要对其的模型
+     * @return 对其后的模型
+     */
+    private VenueModelInfo alignLine(VenueModelInfo venueModelInfoClick) {
+        int left = venueModelInfoClick.getLeft();
+        int top = venueModelInfoClick.getTop();
+        int newLeft = left - left % 80;
+        int newRight = venueModelInfoClick.getRight() - left % 80;
+        if (left % 80 != 0) {
+            venueModelInfoClick.setLeft(Math.max(newLeft, 0));
+            venueModelInfoClick.setRight(newRight);
+        }
+        int newTop = top - top % 80;
+        int newBottom = venueModelInfoClick.getBottom() - top % 80;
+        if (top % 80 != 0) {
+            venueModelInfoClick.setTop(Math.max(newTop, 0));
+            venueModelInfoClick.setBottom(newBottom);
+        }
+
+        //对齐后再检测是否重叠 如果重叠 需要调整对齐位置
+        return venueModelInfoClick;
     }
 
     /**
@@ -329,9 +443,18 @@ public class Engine {
                 }
             }
             otherModelInfos.add(modelInfo.copy());
+
         }
-        if (otherModelInfos.size() > clickModelPosition && clickModelPosition != -1)
+        if (otherModelInfos.size() > clickModelPosition && clickModelPosition != -1) {
             otherModelInfos.remove(clickModelPosition);
+        }
+        Iterator<VenueModelInfo> it = otherModelInfos.iterator();
+        while (it.hasNext()) {
+            VenueModelInfo modelInfo = it.next();
+            if (modelInfo.isDefaultModel()) {
+                it.remove();
+            }
+        }
         clickLastX = rawX;
         clickLastY = rawY;
     }
@@ -431,10 +554,11 @@ public class Engine {
      */
     private void moveVenveModelUp() {
         boolean isDouble = false;//是否重叠
-        int clickLeft = modelInfos.get(clickModelPosition).getLeft();
-        int clickRight = modelInfos.get(clickModelPosition).getRight();
-        int clickTop = modelInfos.get(clickModelPosition).getTop();
-        int clickBottom = modelInfos.get(clickModelPosition).getBottom();
+        VenueModelInfo venueModelInfo = modelInfos.get(clickModelPosition);
+        int clickLeft = venueModelInfo.getLeft();
+        int clickRight = venueModelInfo.getRight();
+        int clickTop = venueModelInfo.getTop();
+        int clickBottom = venueModelInfo.getBottom();
         for (VenueModelInfo modelInfo : otherModelInfos) {
             isDouble = checkDouble2(clickLeft, clickRight, clickTop, clickBottom, modelInfo);
             if (isDouble) break;
@@ -445,9 +569,12 @@ public class Engine {
             modelInfos.add(lastModelInfo.copy());
 //            invalidate();
             handlerAction(Action.ACTION_MOVE_FAIL_DOUBLE);
+        } else {
+            alignModel(venueModelInfo);
         }
 //        else {
-//            Toast.makeText(getContext(), "已经移动到该位置", Toast.LENGTH_SHORT).show();
+//            alignLine(venueModelInfo);
+//            handlerAction(Action.ACTION_MOVE);
 //        }
     }
 
@@ -474,7 +601,9 @@ public class Engine {
             return true;
         } else if (modelLeft < left && modelRight > right && modelTop > top && modelBottom < bottom) {//四个点都不在模型内部 但是中间部分区域 重叠到一起
             return true;
-        } else if (modelLeft > left && modelRight < right && modelTop < top && modelBottom > bottom) {
+        } else if (modelLeft > left && modelRight < right && modelTop < top && modelBottom > bottom) {//四个点都不在模型内部 但是中间部分区域 重叠到一起
+            return true;
+        } else if (modelLeft == left && modelRight == right && modelTop == top && modelBottom == bottom) {//完全重叠
             return true;
         }
         return false;

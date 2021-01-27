@@ -100,9 +100,22 @@ public class MyVenue extends View implements ActionListener {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         drawVenue(canvas);
+        drawGrid(canvas);
         if (engine.getModelInfos().size() == 0) return;
         drawModel(canvas, engine.getModelInfos());
         initPaint();
+    }
+
+    private void drawGrid(Canvas canvas) {
+        mRectPaint.setColor(Color.WHITE);
+        //画竖线
+        for (int i = left; i < right; i += 80) {
+            canvas.drawLine(i, top, i, bottom, mRectPaint);
+        }
+        //画横线
+        for (int j = top; j < bottom; j += 80) {
+            canvas.drawLine(left, j, right, j, mRectPaint);
+        }
     }
 
     private void drawVenue(Canvas canvas) {
@@ -190,24 +203,7 @@ public class MyVenue extends View implements ActionListener {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        //先判断是否点击到模型上面 点击到模型上再处理是点击还是移动模型
-        //没有点击到模型上的话 事件不处理
-
         engine.onTouchEvent(event);
-
-//        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-//            case MotionEvent.ACTION_DOWN:
-//                actionDown(event);
-//                break;
-//            case MotionEvent.ACTION_UP:
-//                actionUp(event);
-//                break;
-//            case MotionEvent.ACTION_BUTTON_PRESS:
-//                performClick();
-//            case MotionEvent.ACTION_MOVE:
-//                actionMove(event);
-//                break;
-//        }
         return super.onTouchEvent(event);
     }
 
@@ -284,6 +280,11 @@ public class MyVenue extends View implements ActionListener {
             }
         }
         Toast.makeText(getContext(), "框选完成，清除选择框，选中" + selectCount + "个模型", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void align() {
+        invalidate();
     }
 
     public void deleteSelectModel() {

@@ -28,4 +28,6 @@ public interface ActionListener {
     void rotate();
 
     void clearSelectArea();
+
+    void align();
 }
