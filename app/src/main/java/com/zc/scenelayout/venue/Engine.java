@@ -20,6 +20,8 @@ public class Engine {
 
     public static final String TAG = Engine.class.getSimpleName();
 
+    private boolean isAlign = true;//是否开启对齐
+
     private Action action;
 
     private ActionListener actionListener;
@@ -297,6 +299,7 @@ public class Engine {
      * @param clickModel 需要对齐的模型
      */
     private void alignModel(VenueModelInfo clickModel) {
+        if (!isAlign) return;
         if (otherModelInfos.size() == 0) return;
         int clickModelLeft = clickModel.getLeft();
         int clickModelRight = clickModel.getRight();
@@ -387,7 +390,7 @@ public class Engine {
             clickModel.setTop(alginModelInfo.getTop());
             clickModel.setBottom(alginModelInfo.getBottom());
             handlerAction(Action.ACTION_ALIGN);
-        }else{
+        } else {
             handlerAction(Action.ACTION_ALIGN_FAIL_OUT_BOUNDARY);
         }
 
@@ -674,5 +677,9 @@ public class Engine {
 
     public void addOnActionListener(ActionListener actionListener) {
         this.actionListener = actionListener;
+    }
+
+    public void setAlign(boolean isAlign) {
+        this.isAlign = isAlign;
     }
 }
