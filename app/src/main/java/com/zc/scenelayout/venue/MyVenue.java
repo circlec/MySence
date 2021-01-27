@@ -287,6 +287,11 @@ public class MyVenue extends View implements ActionListener {
         invalidate();
     }
 
+    @Override
+    public void alignFailOutBoundary() {
+        Toast.makeText(getContext(), "对齐后超出边界，无法对齐", Toast.LENGTH_SHORT).show();
+    }
+
     public void deleteSelectModel() {
         engine.deleteSelectModel();
     }

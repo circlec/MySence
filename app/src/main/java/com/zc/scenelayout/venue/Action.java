@@ -21,6 +21,7 @@ public class Action {
     public static final int ACTION_ROTATE = 10;//旋转选中模型
     public static final int ACTION_CLEAR_SELECT_AREA = 11;//清除选中框
     public static final int ACTION_ALIGN = 12;//对齐模型
+    public static final int ACTION_ALIGN_FAIL_OUT_BOUNDARY = 13;//对齐失败，对齐后超出边界;
 
     private int actitonStatus;
 

@@ -30,4 +30,6 @@ public interface ActionListener {
     void clearSelectArea();
 
     void align();
+
+    void alignFailOutBoundary();
 }
